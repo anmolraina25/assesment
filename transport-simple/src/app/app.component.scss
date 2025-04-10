@@ -13,6 +13,9 @@
 
 .graph {
     width: 80%;
+    display: flex;
+    align-items: flex-end;
+    overflow-y: auto;
 }
 
 .input-holder {
@@ -22,4 +25,24 @@
 .add-btn {
     display: flex;
     justify-content: center;
+}
+
+.node {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.node-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    span {
+        height: 10px;
+        width: 10px;
+        background: black;
+        border-radius: 10px;
+    }
 }

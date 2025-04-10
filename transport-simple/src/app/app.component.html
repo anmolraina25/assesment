@@ -23,5 +23,55 @@
     </div>
   </form>
   <div class="graph">
+    <ng-container *ngIf="tripNodes.length === 0">
+      <p>Please add trip information to see the graph</p>
+    </ng-container>
+    <span *ngFor="let node of tripNodes; let nodeIndex = index" class="node">
+      <span class="node-bubble">
+        <span></span>
+        {{node.start + '-' + node.end}}
+      </span>
+      <span>
+        <ng-container *ngIf="node.nextLink === 'CONTINUED'">
+          ---
+        </ng-container>
+        <ng-container *ngIf="node.nextLink === 'UNCONTINUED'">
+          >>>
+        </ng-container>
+        <ng-container *ngIf="node.nextLink === 'LEVEL_UP'">
+          /
+        </ng-container>
+        <ng-container *ngIf="node.nextLink === 'LEVEL_DOWN'">
+          \
+        </ng-container>
+      </span>
+    </span>
+  </div>
+</div>
+
+<div class="timeline">
+  <div class="segment">
+    <div class="dot filled"></div>
+    <div class="label">BLR - MAA</div>
+  </div>
+  <div class="segment arrow blue">
+    <div class="dot filled"></div>
+    <div class="label">MAA - HYD</div>
+  </div>
+  <div class="segment curve orange">
+    <div class="dot hollow"></div>
+    <div class="label">BLR - HYD</div>
+  </div>
+  <div class="segment straight grey">
+    <div class="dot hollow"></div>
+    <div class="label">HYB - DEL</div>
+  </div>
+  <div class="segment curve grey">
+    <div class="dot hollow"></div>
+    <div class="label">HYB - DEL</div>
+  </div>
+  <div class="segment curve reverse">
+    <div class="dot hollow"></div>
+    <div class="label">DEL - BLR</div>
   </div>
 </div>

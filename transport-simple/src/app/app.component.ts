@@ -40,6 +40,7 @@ export class AppComponent {
 
   ngOnInit() {
     this.setUpTripsInputListener();
+    this.addTrip();
   }
 
   get tripsFormArray(): FormArray {
@@ -62,12 +63,12 @@ export class AppComponent {
         })
         this.tripNodes = [];
         if (tripsToConsider.length > 0) {
-          this.calculateLevels(tripsToConsider);
+          this.calculateTripNodeList(tripsToConsider);
         }
       });
   }
 
-  private calculateLevels(trips: any[]) {
+  private calculateTripNodeList(trips: any[]) {
     // group nodes as per levels
     let levelledNodes: any[][] = [];
     for (let i = 0; i < trips.length; i++) {
@@ -111,6 +112,25 @@ export class AppComponent {
       }
     }
     // now calculate link types between nodes
+    for (let m = 0; m < this.tripNodes.length; m++) {
+      if (m < this.tripNodes.length - 1) {
+        if (this.tripNodes[m].level === this.tripNodes[m + 1].level) {
+          if (this.tripNodes[m].end === this.tripNodes[m+1].start) {
+            this.tripNodes[m].nextLink = 'CONTINUED'
+          } else {
+            this.tripNodes[m].nextLink = 'UNCONTINUED'
+          }
+        }
+        if (this.tripNodes[m].level < this.tripNodes[m + 1].level) {
+          this.tripNodes[m].nextLink = 'LEVEL_UP'
+        }
+        if (this.tripNodes[m].level > this.tripNodes[m + 1].level) {
+          this.tripNodes[m].nextLink = 'LEVEL_DOWN'
+        }
+      } else {
+        this.tripNodes[m].nextLink = '';
+      }
+    }
   }
 
   addTrip() {

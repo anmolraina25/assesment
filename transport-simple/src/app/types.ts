@@ -9,7 +9,7 @@ export type tripLocation = {
 }
 
 export type tripNode = {
-  nextLink: 'CONTINUED' | 'UNCONTINUED' | 'LEVEL_UP' | 'LEVEL DOWN' | ''
+  nextLink: 'CONTINUED' | 'UNCONTINUED' | 'LEVEL_UP' | 'LEVEL_DOWN' | ''
   level: number,
   start: string,
   end: string
