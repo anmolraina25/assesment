@@ -1,1 +1,27 @@
-<p> my component will come here </p>
+<div class="main-container">
+  <form class="trip" [formGroup]="tripsForm">
+    <ng-container formArrayName="trips">
+      <ng-container *ngFor="let group of tripsFormArray.controls; let gIndex = index">
+        <div class="input-holder" [formGroupName]="gIndex">
+          <mat-form-field>
+            <mat-label>Start Point</mat-label>
+            <mat-select formControlName="start">
+              <mat-option [value]="location.code" *ngFor="let location of locationList">{{location.name}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>End Point</mat-label>
+            <mat-select formControlName="end">
+              <mat-option [value]="location.code" *ngFor="let location of locationList">{{location.name}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </ng-container>
+    <div class="add-btn">
+      <button mat-raised-button (click)="addTrip()" [disabled]="tripsForm.invalid">Add Trip</button>
+    </div>
+  </form>
+  <div class="graph">
+  </div>
+</div>
