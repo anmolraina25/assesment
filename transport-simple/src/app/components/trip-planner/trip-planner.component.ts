@@ -39,7 +39,12 @@ export class TripPlannerComponent {
 
   ngOnInit() {
     this.setUpTripsInputListener();
-    this.addTrip();
+    this.tripsFormArray.push(
+      new FormGroup({
+        start: new FormControl('', [Validators.required]),
+        end: new FormControl('', [Validators.required]),
+      })
+    );
   }
 
   get tripsFormArray(): FormArray {
@@ -131,10 +136,18 @@ export class TripPlannerComponent {
           }
         }
         if (this.tripNodes[m].level < this.tripNodes[m + 1].level) {
-          this.tripNodes[m].nextLink = 'LEVEL_UP';
+          if (this.tripNodes[m].end === this.tripNodes[m + 1].start) {
+            this.tripNodes[m].nextLink = 'LEVEL_UP_CONT';
+          } else {
+            this.tripNodes[m].nextLink = 'LEVEL_UP_UNCONT';
+          }
         }
         if (this.tripNodes[m].level > this.tripNodes[m + 1].level) {
-          this.tripNodes[m].nextLink = 'LEVEL_DOWN';
+          if (this.tripNodes[m].end === this.tripNodes[m + 1].start) {
+            this.tripNodes[m].nextLink = 'LEVEL_DOWN_CONT';
+          } else {
+            this.tripNodes[m].nextLink = 'LEVEL_DOWN_UNCONT';
+          }
         }
       } else {
         this.tripNodes[m].nextLink = '';
@@ -151,7 +164,7 @@ export class TripPlannerComponent {
 
   private drawGraph(maxLevel: number) {
     let canvas = document.getElementById('graphCanvas') as HTMLCanvasElement;
-    canvas.height = Math.max(500, this.getGraphHolder().offsetHeight);
+    canvas.height = Math.max(500, this.getGraphHolder().offsetHeight) - 6;
     canvas.width = Math.max(500, this.getGraphHolder().offsetWidth);
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     // clear canvas
@@ -176,33 +189,65 @@ export class TripPlannerComponent {
       ctx.font = '10px Arial';
       ctx.fillText(
         this.tripNodes[i].start + '-' + this.tripNodes[i].end,
-        nodeCordinates[i].x - (nodeRadius * 4),
-        nodeCordinates[i].y + (nodeRadius * 4)
+        nodeCordinates[i].x - nodeRadius * 4,
+        nodeCordinates[i].y + nodeRadius * 4
       );
       if (i < nodeCordinates.length - 1) {
-        // create edge
-        ctx.beginPath();
         if (this.tripNodes[i].nextLink === 'UNCONTINUED') {
-          this.canvas_arrow(
+          ctx.beginPath();
+          this.drawLineWithArrow(
             ctx,
             nodeCordinates[i].x + nodeRadius,
             nodeCordinates[i].y,
             nodeCordinates[i + 1].x - nodeRadius,
             nodeCordinates[i + 1].y
           );
-        } else {
+          ctx.stroke();
+        }
+        if (this.tripNodes[i].nextLink === 'CONTINUED') {
+          ctx.beginPath();
           ctx.moveTo(nodeCordinates[i].x + nodeRadius, nodeCordinates[i].y);
           ctx.lineTo(
             nodeCordinates[i + 1].x - nodeRadius,
             nodeCordinates[i + 1].y
           );
+          ctx.stroke();
         }
-        ctx.stroke();
+        if (
+          this.tripNodes[i].nextLink === 'LEVEL_UP_UNCONT' ||
+          this.tripNodes[i].nextLink === 'LEVEL_DOWN_UNCONT'
+        ) {
+          this.drawCurvedLineWithArrow(
+            ctx,
+            nodeCordinates[i].x + nodeRadius,
+            nodeCordinates[i].y,
+            nodeCordinates[i + 1].x - nodeRadius,
+            nodeCordinates[i + 1].y
+          );
+        }
+        if (
+          this.tripNodes[i].nextLink === 'LEVEL_UP_CONT' ||
+          this.tripNodes[i].nextLink === 'LEVEL_DOWN_CONT'
+        ) {
+          let from = { x: nodeCordinates[i].x + nodeRadius, y: nodeCordinates[i].y };
+          let to = { x: nodeCordinates[i + 1].x - nodeRadius, y: nodeCordinates[i + 1].y}
+          let mid = { x: from.x + ((to.x - from.x) / 2), y: to.y + ((from.y - to.y) / 2)}
+          let bezierA = { x: from.x + ((to.x - from.x) / 2), y: from.y };
+          let bezierB = { x: from.x + ((to.x - from.x) / 2), y: to.y };
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y);
+          ctx.quadraticCurveTo(bezierA.x,bezierA.y, mid.x, mid.y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(mid.x, mid.y);
+          ctx.quadraticCurveTo(bezierB.x,bezierB.y,to.x, to.y);
+          ctx.stroke();
+        }
       }
     }
   }
 
-  private canvas_arrow(
+  private drawLineWithArrow(
     context: CanvasRenderingContext2D,
     fromx: number,
     fromy: number,
@@ -226,7 +271,62 @@ export class TripPlannerComponent {
     );
   }
 
-  addTrip() {
+  private drawCurvedLineWithArrow(
+    ctx: CanvasRenderingContext2D,
+    fromx: number,
+    fromy: number,
+    tox: number,
+    toy: number
+  ) {
+    // DRAW CURVE
+    let from = { x: fromx, y: fromy };
+    let to = { x: tox, y: toy}
+    let mid = { x: from.x + ((to.x - from.x) / 2), y: to.y + ((from.y - to.y) / 2)}
+    let bezierA = { x: from.x + ((to.x - from.x) / 2), y: from.y };
+    let bezierB = { x: from.x + ((to.x - from.x) / 2), y: to.y };
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.quadraticCurveTo(bezierA.x,bezierA.y, mid.x, mid.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(mid.x, mid.y);
+    ctx.quadraticCurveTo(bezierB.x,bezierB.y,to.x, to.y);
+    ctx.stroke();
+    // DRAW ARROW
+    ctx.beginPath();
+    var headlen = 10; // length of head in pixels
+    var dx = tox - fromx;
+    var dy = toy - fromy;
+    // var angle = Math.atan2(dy, dx);
+    var angle = 0;
+    ctx.moveTo(tox, toy);
+    ctx.lineTo(
+      tox - headlen * Math.cos(angle - Math.PI / 6),
+      toy - headlen * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.moveTo(tox, toy);
+    ctx.lineTo(
+      tox - headlen * Math.cos(angle + Math.PI / 6),
+      toy - headlen * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.stroke();
+  }
+
+  addTrip(event: MouseEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.tripsFormArray.push(
+      new FormGroup({
+        start: new FormControl('', [Validators.required]),
+        end: new FormControl('', [Validators.required]),
+      })
+    );
+  }
+
+  clear(event: MouseEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.tripsFormArray.clear();
     this.tripsFormArray.push(
       new FormGroup({
         start: new FormControl('', [Validators.required]),

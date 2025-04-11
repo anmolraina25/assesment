@@ -8,33 +8,39 @@
           <mat-form-field>
             <mat-label>Start Point</mat-label>
             <mat-select formControlName="start">
-              <mat-option
-                [value]="location.code"
-                *ngFor="let location of locationList"
-                >{{ location.name }}</mat-option
-              >
+              <ng-container *ngFor="let location of locationList">
+                <mat-option *ngIf="location.code !== group.value.end" [value]="location.code">{{
+                  location.name
+                }}</mat-option>
+              </ng-container>
             </mat-select>
           </mat-form-field>
           <mat-form-field>
             <mat-label>End Point</mat-label>
             <mat-select formControlName="end">
-              <mat-option
-                [value]="location.code"
-                *ngFor="let location of locationList"
-                >{{ location.name }}</mat-option
-              >
+              <ng-container *ngFor="let location of locationList">
+                <mat-option *ngIf="location.code !== group.value.start" [value]="location.code">{{
+                  location.name
+                }}</mat-option>
+              </ng-container>
             </mat-select>
           </mat-form-field>
         </div>
       </ng-container>
     </ng-container>
-    <div class="add-btn">
+    <div class="action-btns">
       <button
         mat-raised-button
-        (click)="addTrip()"
+        (click)="addTrip($event)"
         [disabled]="tripsForm.invalid"
       >
         Add Trip
+      </button>
+      <button
+        mat-raised-button
+        (click)="clear($event)"
+      >
+        Clear
       </button>
     </div>
   </form>
