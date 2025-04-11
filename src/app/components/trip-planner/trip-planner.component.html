@@ -1,0 +1,55 @@
+<div class="trip-container">
+  <form class="trip" [formGroup]="tripsForm">
+    <ng-container formArrayName="trips">
+      <ng-container
+        *ngFor="let group of tripsFormArray.controls; let gIndex = index"
+      >
+        <div class="input-holder" [formGroupName]="gIndex">
+          <mat-form-field>
+            <mat-label>Start Point</mat-label>
+            <mat-select formControlName="start">
+              <ng-container *ngFor="let location of locationList">
+                <mat-option *ngIf="location.code !== group.value.end" [value]="location.code">{{
+                  location.name
+                }}</mat-option>
+              </ng-container>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>End Point</mat-label>
+            <mat-select formControlName="end">
+              <ng-container *ngFor="let location of locationList">
+                <mat-option *ngIf="location.code !== group.value.start" [value]="location.code">{{
+                  location.name
+                }}</mat-option>
+              </ng-container>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </ng-container>
+    <div class="action-btns">
+      <button
+        mat-raised-button
+        (click)="addTrip($event)"
+        [disabled]="tripsForm.invalid"
+      >
+        Add Trip
+      </button>
+      <button
+        mat-raised-button
+        (click)="clear($event)"
+      >
+        Clear
+      </button>
+    </div>
+  </form>
+  <div class="graph" [id]="'graph'">
+    <ng-container *ngIf="tripNodes.length === 0">
+      <div class="no-trip">Please add trip information to see the graph</div>
+    </ng-container>
+    <ng-container *ngIf="tripNodes.length > 0">
+      <canvas [id]="'graphCanvas'"></canvas>
+    </ng-container>
+  </div>
+</div>
