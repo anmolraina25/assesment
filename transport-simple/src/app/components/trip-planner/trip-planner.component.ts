@@ -13,7 +13,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { max, Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'trip-planner',
   standalone: true,
@@ -36,8 +36,11 @@ export class TripPlannerComponent {
   });
   tripNodes: tripNode[] = [];
   private destroy$ = new Subject<boolean>();
+  private resizeObserver!: ResizeObserver;
+  private maxLevel = 0;
 
   ngOnInit() {
+    this.watchGraphHolder();
     this.setUpTripsInputListener();
     this.tripsFormArray.push(
       new FormGroup({
@@ -47,12 +50,25 @@ export class TripPlannerComponent {
     );
   }
 
+  ngAfterViewInit() {
+    this.resizeObserver.observe(document.getElementById('graph') as HTMLDivElement);
+  }
+
   get tripsFormArray(): FormArray {
     return this.tripsForm.get('trips') as FormArray;
   }
 
   constructor(private tripService: TripService) {
     this.locationList = [...this.tripService.locationData];
+  }
+
+  private watchGraphHolder() {
+    this.resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      console.log('graph size changed');
+      if (this.tripNodes.length > 0) {
+        this.drawGraph()
+      }
+    })
   }
 
   private setUpTripsInputListener() {
@@ -92,7 +108,7 @@ export class TripPlannerComponent {
     }
     // calculate levels
     let level = 0;
-    let maxLevel = 0;
+    this.maxLevel = 0;
     for (let j = 0; j < levelledNodes.length; j++) {
       // assign level to trip nodes
       for (let k = 0; k < levelledNodes[j].length; k++) {
@@ -103,8 +119,8 @@ export class TripPlannerComponent {
           nextLink: '',
         });
       }
-      if (level > maxLevel) {
-        maxLevel = level;
+      if (level > this.maxLevel) {
+        this.maxLevel = level;
       }
       // calculate level based on next node
       if (j !== levelledNodes.length - 1) {
@@ -154,7 +170,7 @@ export class TripPlannerComponent {
       }
     }
     setTimeout(() => {
-      this.drawGraph(maxLevel + 1);
+      this.drawGraph();
     });
   }
 
@@ -162,10 +178,12 @@ export class TripPlannerComponent {
     return document.getElementById('graph') as HTMLDivElement;
   }
 
-  private drawGraph(maxLevel: number) {
+  private drawGraph() {
+    let maxLevel = this.maxLevel + 1;
     let canvas = document.getElementById('graphCanvas') as HTMLCanvasElement;
     canvas.height = Math.max(500, this.getGraphHolder().offsetHeight) - 6;
     canvas.width = Math.max(500, this.getGraphHolder().offsetWidth);
+    canvas.style.background = 'antiquewhite'
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     // clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -332,5 +350,8 @@ export class TripPlannerComponent {
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
   }
 }
