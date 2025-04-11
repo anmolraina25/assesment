@@ -194,120 +194,114 @@ export class TripPlannerComponent {
       );
       if (i < nodeCordinates.length - 1) {
         if (this.tripNodes[i].nextLink === 'UNCONTINUED') {
-          ctx.beginPath();
-          this.drawLineWithArrow(
+          this.drawLine(
             ctx,
             nodeCordinates[i].x + nodeRadius,
             nodeCordinates[i].y,
             nodeCordinates[i + 1].x - nodeRadius,
-            nodeCordinates[i + 1].y
+            nodeCordinates[i + 1].y,
+            true
           );
-          ctx.stroke();
         }
         if (this.tripNodes[i].nextLink === 'CONTINUED') {
-          ctx.beginPath();
-          ctx.moveTo(nodeCordinates[i].x + nodeRadius, nodeCordinates[i].y);
-          ctx.lineTo(
+          this.drawLine(
+            ctx,
+            nodeCordinates[i].x + nodeRadius,
+            nodeCordinates[i].y,
             nodeCordinates[i + 1].x - nodeRadius,
-            nodeCordinates[i + 1].y
+            nodeCordinates[i + 1].y,
+            false
           );
-          ctx.stroke();
         }
         if (
           this.tripNodes[i].nextLink === 'LEVEL_UP_UNCONT' ||
           this.tripNodes[i].nextLink === 'LEVEL_DOWN_UNCONT'
         ) {
-          this.drawCurvedLineWithArrow(
+          this.drawCurvedLine(
             ctx,
             nodeCordinates[i].x + nodeRadius,
             nodeCordinates[i].y,
             nodeCordinates[i + 1].x - nodeRadius,
-            nodeCordinates[i + 1].y
+            nodeCordinates[i + 1].y,
+            true
           );
         }
         if (
           this.tripNodes[i].nextLink === 'LEVEL_UP_CONT' ||
           this.tripNodes[i].nextLink === 'LEVEL_DOWN_CONT'
         ) {
-          let from = { x: nodeCordinates[i].x + nodeRadius, y: nodeCordinates[i].y };
-          let to = { x: nodeCordinates[i + 1].x - nodeRadius, y: nodeCordinates[i + 1].y}
-          let mid = { x: from.x + ((to.x - from.x) / 2), y: to.y + ((from.y - to.y) / 2)}
-          let bezierA = { x: from.x + ((to.x - from.x) / 2), y: from.y };
-          let bezierB = { x: from.x + ((to.x - from.x) / 2), y: to.y };
-          ctx.beginPath();
-          ctx.moveTo(from.x, from.y);
-          ctx.quadraticCurveTo(bezierA.x,bezierA.y, mid.x, mid.y);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(mid.x, mid.y);
-          ctx.quadraticCurveTo(bezierB.x,bezierB.y,to.x, to.y);
-          ctx.stroke();
+          this.drawCurvedLine(
+            ctx,
+            nodeCordinates[i].x + nodeRadius,
+            nodeCordinates[i].y,
+            nodeCordinates[i + 1].x - nodeRadius,
+            nodeCordinates[i + 1].y,
+            false
+          );
         }
       }
     }
   }
 
-  private drawLineWithArrow(
-    context: CanvasRenderingContext2D,
-    fromx: number,
-    fromy: number,
-    tox: number,
-    toy: number
-  ) {
-    var headlen = 10; // length of head in pixels
-    var dx = tox - fromx;
-    var dy = toy - fromy;
-    var angle = Math.atan2(dy, dx);
-    context.moveTo(fromx, fromy);
-    context.lineTo(tox, toy);
-    context.lineTo(
-      tox - headlen * Math.cos(angle - Math.PI / 6),
-      toy - headlen * Math.sin(angle - Math.PI / 6)
-    );
-    context.moveTo(tox, toy);
-    context.lineTo(
-      tox - headlen * Math.cos(angle + Math.PI / 6),
-      toy - headlen * Math.sin(angle + Math.PI / 6)
-    );
-  }
-
-  private drawCurvedLineWithArrow(
+  private drawLine(
     ctx: CanvasRenderingContext2D,
     fromx: number,
     fromy: number,
     tox: number,
-    toy: number
+    toy: number,
+    withArrow: boolean
   ) {
-    // DRAW CURVE
+    ctx.beginPath();
+    ctx.moveTo(fromx, fromy);
+    ctx.lineTo(tox, toy);
+    ctx.stroke();
+    if (withArrow === true) {
+      this.drawArrow(ctx, tox, toy);
+    }
+  }
+
+  private drawCurvedLine(
+    ctx: CanvasRenderingContext2D,
+    fromx: number,
+    fromy: number,
+    tox: number,
+    toy: number,
+    withArrow: boolean
+  ) {
     let from = { x: fromx, y: fromy };
-    let to = { x: tox, y: toy}
-    let mid = { x: from.x + ((to.x - from.x) / 2), y: to.y + ((from.y - to.y) / 2)}
-    let bezierA = { x: from.x + ((to.x - from.x) / 2), y: from.y };
-    let bezierB = { x: from.x + ((to.x - from.x) / 2), y: to.y };
+    let to = { x: tox, y: toy };
+    let mid = {
+      x: from.x + (to.x - from.x) / 2,
+      y: to.y + (from.y - to.y) / 2,
+    };
+    let bezierA = { x: from.x + (to.x - from.x) / 2, y: from.y };
+    let bezierB = { x: from.x + (to.x - from.x) / 2, y: to.y };
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
-    ctx.quadraticCurveTo(bezierA.x,bezierA.y, mid.x, mid.y);
+    ctx.quadraticCurveTo(bezierA.x, bezierA.y, mid.x, mid.y);
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(mid.x, mid.y);
-    ctx.quadraticCurveTo(bezierB.x,bezierB.y,to.x, to.y);
+    ctx.quadraticCurveTo(bezierB.x, bezierB.y, to.x, to.y);
     ctx.stroke();
-    // DRAW ARROW
+    if (withArrow === true) {
+      this.drawArrow(ctx, tox, toy);
+    }
+  }
+
+  private drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number) {
     ctx.beginPath();
-    var headlen = 10; // length of head in pixels
-    var dx = tox - fromx;
-    var dy = toy - fromy;
-    // var angle = Math.atan2(dy, dx);
-    var angle = 0;
-    ctx.moveTo(tox, toy);
+    let headlen = 10; // length of head in pixels
+    let angle = 0;
+    ctx.moveTo(x, y);
     ctx.lineTo(
-      tox - headlen * Math.cos(angle - Math.PI / 6),
-      toy - headlen * Math.sin(angle - Math.PI / 6)
+      x - headlen * Math.cos(angle - Math.PI / 6),
+      y - headlen * Math.sin(angle - Math.PI / 6)
     );
-    ctx.moveTo(tox, toy);
+    ctx.moveTo(x, y);
     ctx.lineTo(
-      tox - headlen * Math.cos(angle + Math.PI / 6),
-      toy - headlen * Math.sin(angle + Math.PI / 6)
+      x - headlen * Math.cos(angle + Math.PI / 6),
+      y - headlen * Math.sin(angle + Math.PI / 6)
     );
     ctx.stroke();
   }
